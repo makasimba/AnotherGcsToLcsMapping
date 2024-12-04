@@ -37,17 +37,21 @@ public class CoordinateTransformer
     /* Computes the LCS rotation matrix where zDirection is presented by the MajorAxisVector */
     public static double[,] ComputeRotationMatrix(Point3D xDirection, Point3D zDirection)
     {
-        Point3D u = Normalize(xDirection);
-        Point3D w = Normalize(zDirection);
+        Point3D x = Normalize(xDirection);
+        Point3D z = Normalize(zDirection);
+        Point3D y = Normalize(CrossProduct(z, x));
 
-        Point3D v = CrossProduct(u, w);
-        v = Normalize(v);
+        y = new Point3D(y.X, y.Y, y.Z);
+
+        Console.WriteLine($"X axis of lcs:\n({x.X},{x.Y},{x.Z})");
+        Console.WriteLine($"Z axis of lcs:\n({z.X},{z.Y},{z.Z})");
+        Console.WriteLine($"Y axis of lcs:\n({y.X},{y.Y},{y.Z})");
 
         return new double[,]
         {
-            { u.X, v.X, w.X },
-            { u.Y, v.Y, w.Y },
-            { u.Z, v.Z, w.Z }
+            { x.X, y.X, z.X },
+            { x.Y, y.Y, z.Y },
+            { x.Z, y.Z, z.Z }
         };
     }
 
@@ -113,11 +117,13 @@ class Program
         double[,] rotationMatrixHorizontal = CoordinateTransformer.ComputeRotationMatrix(xDirectionHorizontal, zDirectionHorizontal);
 
         Point3D lcsOriginHorizontal = new Point3D(500000, 300000, 100000);
-        Point3D detailingVectorLcs = new Point3D(100, 40, 50);
+        Point3D detailingVectorLcs = new Point3D(-100, -40, 50);
 
         Point3D pointGcsHorizontal = CoordinateTransformer.LcsToGcs(detailingVectorLcs, lcsOriginHorizontal, rotationMatrixHorizontal);
         Console.WriteLine($"Horizontal Detailed Position: E {pointGcsHorizontal.X}, N {pointGcsHorizontal.Y}, U {pointGcsHorizontal.Z}");
         Console.WriteLine($"Expected Horizontal Detailed Position: E {500_040}, N {299_900}, U {100_050}");
+        Point3D recomputedHorizontal = CoordinateTransformer.GcsToLcs(pointGcsHorizontal, lcsOriginHorizontal, rotationMatrixHorizontal);
+        Console.WriteLine($"Recomputed Initial Horizontal Detailed Position: E {recomputedHorizontal.X}, N {recomputedHorizontal.Y}, U {recomputedHorizontal.Z}");
 
         Console.WriteLine();
 
@@ -131,5 +137,7 @@ class Program
         Point3D pointGcsVertical = CoordinateTransformer.LcsToGcs(detailingVectorLcs, lcsOriginVertical, rotationMatrixVertical);
         Console.WriteLine($"Vertical Detailed Position: E {pointGcsVertical.X}, N {pointGcsVertical.Y}, U {pointGcsVertical.Z}");
         Console.WriteLine($"Expected Vertical Detailed Position: E {499960}, N {300050}, U {99900}");
+        Point3D recomputedVertical = CoordinateTransformer.GcsToLcs(pointGcsVertical, lcsOriginVertical, rotationMatrixVertical);
+        Console.WriteLine($"Recomputed Initial Vertical Detailed Position: E {recomputedVertical.X}, N {recomputedVertical.Y}, U {recomputedVertical.Z}");
     }
 }
